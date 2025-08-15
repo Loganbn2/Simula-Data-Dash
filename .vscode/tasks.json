@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run AI Chat Analytics Dashboard",
+			"type": "shell",
+			"command": "/Users/loganbn2/Simula-Data-Dash/.venv/bin/python -m streamlit run dashboard.py",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [],
+			"args": []
+		}
+	]
+}
