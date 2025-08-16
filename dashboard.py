@@ -3,7 +3,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from analytics import AnalyticsVisualizer
-from data_generator import DataGenerator
+try:
+    from data_generator import DataGenerator
+except ImportError:
+    DataGenerator = None
 from ai_insights import AIInsights
 from supabase_client import SupabaseClient, DataMigration
 import sqlite3
@@ -182,16 +185,20 @@ def load_sqlite_data():
     
     if not db_path.exists():
         # Generate sample data if database doesn't exist
-        generator = DataGenerator()
-        data = generator.generate_sample_data(1000)  # Generate 1000 sample records
-        
-        # Save to database
-        conn = sqlite3.connect(db_path)
-        data.to_sql('chat_logs', conn, if_exists='replace', index=False)
-        conn.close()
-        
-        st.info("Generated sample SQLite data for demo purposes")
-        return data
+        if DataGenerator is not None:
+            generator = DataGenerator()
+            data = generator.generate_sample_data(1000)  # Generate 1000 sample records
+            
+            # Save to database
+            conn = sqlite3.connect(db_path)
+            data.to_sql('chat_logs', conn, if_exists='replace', index=False)
+            conn.close()
+            
+            st.info("Generated sample SQLite data for demo purposes")
+            return data
+        else:
+            st.warning("DataGenerator not available. Please connect to Supabase or upload data manually.")
+            return pd.DataFrame()
     else:
         # Load from database
         conn = sqlite3.connect(db_path)

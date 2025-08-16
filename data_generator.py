@@ -1,14 +1,21 @@
 import pandas as pd
 import numpy as np
-from faker import Faker
+try:
+    from faker import Faker
+    FAKER_AVAILABLE = True
+except ImportError:
+    FAKER_AVAILABLE = False
 import random
 from datetime import datetime, timedelta
 
 class DataGenerator:
     def __init__(self, seed=42):
         """Initialize the data generator with a seed for reproducibility."""
-        self.fake = Faker()
-        Faker.seed(seed)
+        if FAKER_AVAILABLE:
+            self.fake = Faker()
+            Faker.seed(seed)
+        else:
+            self.fake = None
         random.seed(seed)
         np.random.seed(seed)
         
