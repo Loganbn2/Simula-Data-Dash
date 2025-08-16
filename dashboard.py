@@ -373,11 +373,11 @@ def main():
     # AI Insights Panel at the top
     st.subheader("AI Insights")
     
-    # Suggested queries - chatbot style
-    st.markdown("**💬 Suggested questions:**")
+    # Example queries - chatbot style
+    st.markdown("**💬 Example Queries:**")
     
-    # Arrange buttons close together with optimal widths for single-line text
-    col1, col2, col3, col4 = st.columns([0.8, 0.7, 0.75, 0.5], gap="small")
+    # Arrange buttons with wider columns for better visibility
+    col1, col2, col3 = st.columns([1.2, 1.1, 1.15], gap="small")
     
     with col1:
         if st.button("What is the click rate for ai game ads on mobile?", key="query1", help="Click to see AI games performance"):
@@ -390,8 +390,6 @@ def main():
     with col3:
         if st.button("How many users are using AI for online shopping?", key="query3", help="Click to see AI shopping usage"):
             st.session_state.selected_answer = "query3"
-    
-    # col4 is left empty to push everything to the left
     
     # Query input
     user_query = st.text_area(
@@ -435,12 +433,13 @@ def main():
     chart_col1, chart_col2, chart_col3 = st.columns(3)
     
     with chart_col1:
-        # Top categories
+        # Top categories (percentages)
         if not filtered_data.empty:
-            top_categories = filtered_data['message_category'].value_counts().head(10).reset_index()
-            top_categories.columns = ['category', 'count']
+            top_categories = filtered_data['message_category'].value_counts(normalize=True).head(10).reset_index()
+            top_categories.columns = ['category', 'percent']
+            top_categories['percent'] = (top_categories['percent'] * 100).round(2)
             fig_categories = st.session_state.visualizer.create_category_chart(
-                top_categories, "Top Message Categories"
+                top_categories, "Top Message Categories (%)", percent_mode=True
             )
             st.plotly_chart(fig_categories, use_container_width=True)
         
@@ -465,12 +464,13 @@ def main():
                 st.plotly_chart(fig_ctr, use_container_width=True)
     
     with chart_col3:
-        # Top ad categories by impressions
+        # Top ad categories by impressions (percentages)
         if not filtered_data.empty:
-            ad_impressions = filtered_data['ad_category'].value_counts().head(10).reset_index()
-            ad_impressions.columns = ['ad_category', 'impressions']
+            ad_impressions = filtered_data['ad_category'].value_counts(normalize=True).head(10).reset_index()
+            ad_impressions.columns = ['ad_category', 'percent']
+            ad_impressions['percent'] = (ad_impressions['percent'] * 100).round(2)
             fig_impressions = st.session_state.visualizer.create_category_chart(
-                ad_impressions, "Top Ad Categories by Impressions"
+                ad_impressions, "Top Ad Categories by Impressions (%)", percent_mode=True
             )
             st.plotly_chart(fig_impressions, use_container_width=True)
     
@@ -486,12 +486,12 @@ def main():
     
     with additional_col2:
         if not filtered_data.empty:
-            fig_devices = st.session_state.visualizer.create_device_distribution(filtered_data, "Device Distribution")
+            fig_devices = st.session_state.visualizer.create_device_distribution(filtered_data, "Device Distribution", percent_mode=True)
             st.plotly_chart(fig_devices, use_container_width=True)
     
     with additional_col3:
         if not filtered_data.empty:
-            fig_locations = st.session_state.visualizer.create_location_map(filtered_data, "Location Distribution")
+            fig_locations = st.session_state.visualizer.create_location_map(filtered_data, "Location Distribution", percent_mode=True)
             st.plotly_chart(fig_locations, use_container_width=True)
     
     # Data table

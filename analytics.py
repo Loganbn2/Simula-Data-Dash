@@ -28,8 +28,8 @@ class AnalyticsVisualizer:
             font=dict(color='white', size=12, family='Arial, sans-serif')
         )
     
-    def create_category_chart(self, data: pd.DataFrame, title: str) -> go.Figure:
-        """Create a horizontal bar chart for categories."""
+    def create_category_chart(self, data: pd.DataFrame, title: str, percent_mode: bool = False) -> go.Figure:
+        """Create a horizontal bar chart for categories. If percent_mode, show % instead of count."""
         if data.empty:
             fig = go.Figure()
             fig.add_annotation(
@@ -45,16 +45,19 @@ class AnalyticsVisualizer:
                 **self.common_layout
             )
             return fig
-        
         # Create bars with gradient colors
         fig = go.Figure()
-        
         y_values = data[data.columns[0]].tolist()
         x_values = data[data.columns[1]].tolist()
-        
-        # Create bars with custom colors
         colors = [self.color_palette[i % len(self.color_palette)] for i in range(len(y_values))]
-        
+        if percent_mode:
+            text_vals = [f"{val:.2f}%" for val in x_values]
+            hovertemplate = "<b style='color: white;'>%{y}</b><br>" + "<span style='color: white;'>Percent: %{x:.2f}%</span><extra></extra>"
+            xaxis_title = "Percent (%)"
+        else:
+            text_vals = [f"{val:,}" for val in x_values]
+            hovertemplate = "<b style='color: white;'>%{y}</b><br>" + "<span style='color: white;'>Count: %{x:,}</span><extra></extra>"
+            xaxis_title = data.columns[1].title()
         fig.add_trace(go.Bar(
             y=y_values,
             x=x_values,
@@ -63,28 +66,25 @@ class AnalyticsVisualizer:
                 color=colors,
                 line=dict(color='rgba(0,0,0,0.1)', width=1)
             ),
-            text=[f"{val:,}" for val in x_values],
+            text=text_vals,
             textposition='outside',
-            textfont=dict(size=10, color='#111827'),  # Darker text for visibility
-            hovertemplate="<b style='color: white;'>%{y}</b><br>" +
-                         "<span style='color: white;'>Count: %{x:,}</span>" +
-                         "<extra></extra>",
+            textfont=dict(size=10, color='#111827'),
+            hovertemplate=hovertemplate,
             hoverlabel=self._get_hover_styling()
         ))
-        
         fig.update_layout(
             title=dict(text=title, font=dict(size=14, color='#111827', family='Arial, sans-serif')),
             height=400,
             xaxis=dict(
-                title=dict(text=data.columns[1].title(), font=dict(size=12, color='#111827')),
-                tickfont=dict(size=10, color='#1F2937'),  # Darker tick labels
+                title=dict(text=xaxis_title, font=dict(size=12, color='#111827')),
+                tickfont=dict(size=10, color='#1F2937'),
                 gridcolor='#E5E7EB',
                 gridwidth=1,
                 zeroline=False
             ),
             yaxis=dict(
                 title=dict(font=dict(size=12, color='#111827')),
-                tickfont=dict(size=10, color='#1F2937'),  # Darker tick labels
+                tickfont=dict(size=10, color='#1F2937'),
                 gridcolor='#E5E7EB',
                 gridwidth=1
             ),
@@ -96,10 +96,7 @@ class AnalyticsVisualizer:
             ),
             **self.common_layout
         )
-        
-        # Reverse y-axis to show highest values at top
         fig.update_yaxes(autorange="reversed")
-        
         return fig
     
     def create_ctr_chart(self, data: pd.DataFrame, title: str) -> go.Figure:
@@ -233,8 +230,8 @@ class AnalyticsVisualizer:
         
         return fig
     
-    def create_device_distribution(self, data: pd.DataFrame, title: str = "Device Distribution") -> go.Figure:
-        """Create a horizontal bar chart showing device distribution."""
+    def create_device_distribution(self, data: pd.DataFrame, title: str = "Device Distribution", percent_mode: bool = False) -> go.Figure:
+        """Create a horizontal bar chart showing device distribution. If percent_mode, show % instead of count."""
         if data.empty:
             fig = go.Figure()
             fig.add_annotation(
@@ -251,11 +248,8 @@ class AnalyticsVisualizer:
                 paper_bgcolor='white'
             )
             return fig
-        
-        # Handle both column names for device data
         device_col = 'user_device' if 'user_device' in data.columns else 'device_type'
         if device_col not in data.columns:
-            # Return empty figure if neither column exists
             fig = go.Figure()
             fig.update_layout(
                 title=dict(text=title, font=dict(size=14, color='#111827', family='Arial, sans-serif')),
@@ -267,20 +261,27 @@ class AnalyticsVisualizer:
                 paper_bgcolor='white'
             )
             return fig
-        
-        device_counts = data[device_col].value_counts().head(8)
-        
+        if percent_mode:
+            device_counts = data[device_col].value_counts(normalize=True).head(8)
+            x_vals = (device_counts.values * 100).round(2)
+            text_vals = [f"{v:.2f}%" for v in x_vals]
+            xaxis_title = "Percent (%)"
+        else:
+            device_counts = data[device_col].value_counts().head(8)
+            x_vals = device_counts.values
+            text_vals = [f"{v:,}" for v in x_vals]
+            xaxis_title = "Count"
         fig = px.bar(
-            x=device_counts.values,
+            x=x_vals,
             y=device_counts.index,
             orientation='h',
             title=title,
-            color_discrete_sequence=['#1f77b4']
+            color_discrete_sequence=['#1f77b4'],
+            text=text_vals
         )
-        
         fig.update_layout(
             height=300,
-            xaxis_title="Count",
+            xaxis_title=xaxis_title,
             yaxis_title="",
             showlegend=False,
             plot_bgcolor='white',
@@ -289,13 +290,11 @@ class AnalyticsVisualizer:
             title_font_size=16,
             margin=dict(l=20, r=20, t=60, b=20)
         )
-        
         fig.update_yaxes(autorange="reversed")
-        
         return fig
     
-    def create_location_map(self, data: pd.DataFrame, title: str = "Top Locations") -> go.Figure:
-        """Create a simple bar chart for locations (since we don't have coordinates)."""
+    def create_location_map(self, data: pd.DataFrame, title: str = "Top Locations", percent_mode: bool = False) -> go.Figure:
+        """Create a simple bar chart for locations (since we don't have coordinates). If percent_mode, show % instead of count."""
         if data.empty:
             fig = go.Figure()
             fig.add_annotation(
@@ -312,20 +311,27 @@ class AnalyticsVisualizer:
                 paper_bgcolor='white'
             )
             return fig
-        
-        location_counts = data['user_location'].value_counts().head(10)
-        
+        if percent_mode:
+            location_counts = data['user_location'].value_counts(normalize=True).head(10)
+            x_vals = (location_counts.values * 100).round(2)
+            text_vals = [f"{v:.2f}%" for v in x_vals]
+            xaxis_title = "Percent (%)"
+        else:
+            location_counts = data['user_location'].value_counts().head(10)
+            x_vals = location_counts.values
+            text_vals = [f"{v:,}" for v in x_vals]
+            xaxis_title = "Count"
         fig = px.bar(
-            x=location_counts.values,
+            x=x_vals,
             y=location_counts.index,
             orientation='h',
             title=title,
-            color_discrete_sequence=['#ff7f0e']
+            color_discrete_sequence=['#ff7f0e'],
+            text=text_vals
         )
-        
         fig.update_layout(
             height=300,
-            xaxis_title="Count",
+            xaxis_title=xaxis_title,
             yaxis_title="",
             showlegend=False,
             plot_bgcolor='white',
@@ -334,7 +340,5 @@ class AnalyticsVisualizer:
             title_font_size=16,
             margin=dict(l=20, r=20, t=60, b=20)
         )
-        
         fig.update_yaxes(autorange="reversed")
-        
         return fig
