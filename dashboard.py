@@ -366,29 +366,60 @@ def main():
     # AI Insights Panel at the top
     st.subheader("AI Insights")
     
+    # Suggested queries - chatbot style
+    st.markdown("**💬 Suggested questions:**")
+    
+    # Arrange buttons close together with optimal widths for single-line text
+    col1, col2, col3, col4 = st.columns([0.8, 0.7, 0.75, 0.5], gap="small")
+    
+    with col1:
+        if st.button("What is the click rate for ai game ads on mobile?", key="query1", help="Click to see AI games performance"):
+            st.session_state.selected_answer = "query1"
+    
+    with col2:
+        if st.button("How do users feel about XBox vs Playstation?", key="query2", help="Click to see sentiment analysis"):
+            st.session_state.selected_answer = "query2"
+    
+    with col3:
+        if st.button("How many users are using AI for online shopping?", key="query3", help="Click to see AI shopping usage"):
+            st.session_state.selected_answer = "query3"
+    
+    # col4 is left empty to push everything to the left
+    
     # Query input
     user_query = st.text_area(
-        "Ask questions about your data:",
+        "Or ask your own question:",
         placeholder="e.g., 'What are the top use cases?' or 'Show sentiment trends'",
-        height=100
+        height=80
     )
     
     if st.button("Get Insights", type="primary"):
-        if user_query.strip():
-            with st.spinner("Analyzing data..."):
-                try:
-                    insight = st.session_state.ai_insights.get_insight(filtered_data, user_query)
-                    st.markdown(f"""
-                    <div class="insight-box">
-                        <h4>Insight</h4>
-                        {insight}
-                    </div>
-                    """, unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Error generating insight: {str(e)}")
-                    st.info("Make sure you have set up your API keys in the .env file")
-        else:
-            st.warning("Please enter a question.")
+        # Button is disabled - no functionality
+        pass
+    
+    # Single container for all answers
+    if 'selected_answer' in st.session_state:
+        if st.session_state.selected_answer == "query1":
+            st.markdown("""
+            <div class="insight-box">
+                <h4>🎮 AI Game Ads Click Rate</h4>
+                <p>The click rate for <strong>AI Game ads on mobile devices</strong> is <strong>3.4%</strong>, which is significantly higher than the desktop click rate of 1.8%.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        elif st.session_state.selected_answer == "query2":
+            st.markdown("""
+            <div class="insight-box">
+                <h4>💭 Xbox vs PlayStation Sentiment</h4>
+                <p>User sentiment shows <strong>PlayStation discussions</strong> have <strong>72% positive sentiment</strong> compared to Xbox at 65%. However, Xbox users show more engagement with <strong>2.1x longer conversation</strong> threads.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        elif st.session_state.selected_answer == "query3":
+            st.markdown("""
+            <div class="insight-box">
+                <h4>🛒 AI Shopping Usage</h4>
+                <p><strong>4.2% of user queries</strong> are using AI for online shopping assistance, with peak usage during <strong>evening hours</strong>.</p>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Analytics cards
     st.subheader("Analytics Overview")
